@@ -103,7 +103,6 @@ def colorise_message(buffer_ptr)
 
   buffer_name  = Weechat.buffer_get_string(buffer_ptr, "name")
   input        = Weechat.buffer_get_string(buffer_ptr, "input")
-  input.force_encoding('UTF-8')
 
   newput = "\x0309#{input}"
   Weechat.buffer_set(buffer_ptr, "input", newput)
