@@ -1,6 +1,6 @@
 # Automatically apply color to messages sent to a given channel.
 
-COLORISED_CHANNELS = {}
+COLORISED_BUFFERS = {}
 
 def weechat_init
   name    = "colorise"
@@ -58,7 +58,7 @@ def colorise_add(args)
   end
 
   Weechat.print "", "Colorising #{args[0]} with color #{args[1]}"
-  COLORISED_CHANNELS[args[0]] = args[1]
+  COLORISED_BUFFERS[args[0]] = args[1]
 
   Weechat::WEECHAT_RC_OK
 end
@@ -66,7 +66,7 @@ end
 def colorise_list
 
   output = "Colorised channels:\n------------------\n\n"
-  COLORISED_CHANNELS.inject(output) { |str, (channel, code)| str << "#{channel} -> #{code}\n" }
+  COLORISED_BUFFERS.inject(output) { |str, (channel, code)| str << "#{channel} -> #{code}\n" }
 
   Weechat.print "", output
 
@@ -80,7 +80,7 @@ def colorise_rm(args)
   end
 
   Weechat.print "", "Decolorising #{args[0]}, and stabbing a unicorn."
-  COLORISED_CHANNELS.delete(args[0])
+  COLORISED_BUFFERS.delete(args[0])
 
   Weechat::WEECHAT_RC_OK
 end
@@ -92,7 +92,7 @@ def colorise_callback(data, ptr, cmd)
   if input.match %r{^/[^/].*}
     # Don't colorise messages that are weechat commands.
     Weechat::WEECHAT_RC_OK
-  elsif COLORISED_CHANNELS.keys.any? {|buffer| buffer == buffer_name}
+  elsif COLORISED_BUFFERS.keys.any? {|buffer| buffer == buffer_name}
     colorise_message(ptr)
   else
     Weechat::WEECHAT_RC_OK
@@ -104,7 +104,7 @@ def colorise_message(buffer_ptr)
   buffer_name  = Weechat.buffer_get_string(buffer_ptr, "name")
   input        = Weechat.buffer_get_string(buffer_ptr, "input")
 
-  newput = "\x03#{COLORISED_CHANNELS[buffer_name]}#{input}"
+  newput = "\x03#{COLORISED_BUFFERS[buffer_name]}#{input}"
   Weechat.buffer_set(buffer_ptr, "input", newput)
 
   Weechat::WEECHAT_RC_OK
