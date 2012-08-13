@@ -57,7 +57,7 @@ def colorise_add(args)
     return Weechat::WEECHAT_RC_ERROR
   end
 
-  Weechat.print "", "Colorising #{args[0]} with color #{args[1]}"
+  Weechat.print "", "Colorising #{args[0]}"
   COLORISED_BUFFERS[args[0]] = args[1]
 
   Weechat::WEECHAT_RC_OK
@@ -65,8 +65,15 @@ end
 
 def colorise_list
 
-  output = "Colorised channels:\n------------------\n\n"
-  COLORISED_BUFFERS.inject(output) { |str, (channel, code)| str << "#{channel} -> #{code}\n" }
+  output = "Colorised channels\n==================\n"
+
+  channel_max = COLORISED_BUFFERS.keys.max   {|a, b| a.length <=> b.length}.length
+  code_max    = COLORISED_BUFFERS.values.max {|a, b| a.length <=> b.length}.length
+
+  COLORISED_BUFFERS.each do |(channel, code)|
+    channel_padding = ' ' * (channel_max - channel.length)
+    output << "#{channel + channel_padding} | #{code}\n"
+  end
 
   Weechat.print "", output
 
@@ -86,13 +93,13 @@ def colorise_rm(args)
 end
 
 def colorise_callback(data, ptr, cmd)
-  buffer_name  = Weechat.buffer_get_string(ptr, "name")
-  input        = Weechat.buffer_get_string(ptr, "input")
+  buffer_name = Weechat.buffer_get_string(ptr, "name")
+  input       = Weechat.buffer_get_string(ptr, "input")
 
   if input.match %r{^/[^/].*}
     # Don't colorise messages that are weechat commands.
     Weechat::WEECHAT_RC_OK
-  elsif COLORISED_BUFFERS.keys.any? {|buffer| buffer == buffer_name}
+  elsif COLORISED_BUFFERS[buffer_name]
     colorise_message(ptr)
   else
     Weechat::WEECHAT_RC_OK
