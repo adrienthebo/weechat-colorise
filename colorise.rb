@@ -29,7 +29,14 @@ EXAMPLES:
 
   Weechat.register(name, author, version, license, desc, "", "")
   Weechat.hook_command("colorise", desc, usage, long_usage, "", "colorise_command", "")
-  Weechat.hook_command_run("/input return", "colorise_callback", "")
+
+  #irc_out is called after a message has been split, people receiving the message 
+  #will see color, but the sender won't
+  Weechat.hook_modifier("irc_out_privmsg", "colorise", "")
+
+  #irc_out1 is called before message splitting, and its results are visible to the sender
+  #Make sure sender's text gets colored as well
+  Weechat.hook_modifier("irc_out1_privmsg", "colorise", "")
 
   Weechat::WEECHAT_RC_OK
 end
@@ -92,27 +99,18 @@ def colorise_rm(args)
   Weechat::WEECHAT_RC_OK
 end
 
-def colorise_callback(data, ptr, cmd)
-  buffer_name = Weechat.buffer_get_string(ptr, "name")
-  input       = Weechat.buffer_get_string(ptr, "input")
+def colorise(data, signal, server, args)
+  parsed = Weechat.info_get_hashtable("irc_message_parse", {'message' => args})
+  buffer = "#{server}.#{parsed['channel']}"
 
-  if input.match %r{^/[^/].*}
-    # Don't colorise messages that are weechat commands.
-    Weechat::WEECHAT_RC_OK
-  elsif COLORISED_BUFFERS[buffer_name]
-    colorise_message(ptr)
-  else
-    Weechat::WEECHAT_RC_OK
+  if COLORISED_BUFFERS[buffer]
+    (targets, message) = parsed['arguments'].split(':', 2)
+
+    message.match /^(\001ACTION )?(.*)/
+    message = "#{$1}\x03#{COLORISED_BUFFERS[buffer]}#{$2}"
+    args = "PRIVMSG #{targets} :#{message}"
   end
+
+  return args
 end
 
-def colorise_message(buffer_ptr)
-
-  buffer_name  = Weechat.buffer_get_string(buffer_ptr, "name")
-  input        = Weechat.buffer_get_string(buffer_ptr, "input")
-
-  newput = "\x03#{COLORISED_BUFFERS[buffer_name]}#{input}"
-  Weechat.buffer_set(buffer_ptr, "input", newput)
-
-  Weechat::WEECHAT_RC_OK
-end
