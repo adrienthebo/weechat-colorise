@@ -5,7 +5,7 @@ COLORISED_BUFFERS = {}
 def weechat_init
   name    = "colorise"
   author  = "Adrien Thebo <contact@somethingsinistral.net>"
-  version = '0.0.1'
+  version = '0.1.0'
   license = "Apache 2.0"
   desc    = "Apply color to all messages sent to a given channel. For those extra flamboyant channels."
 
