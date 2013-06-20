@@ -103,11 +103,14 @@ def colorise(data, signal, server, args)
   parsed = Weechat.info_get_hashtable("irc_message_parse", {'message' => args})
   buffer = "#{server}.#{parsed['channel']}"
 
-  if COLORISED_BUFFERS[buffer]
+  if (color_code = COLORISED_BUFFERS[buffer])
     (targets, message) = parsed['arguments'].split(':', 2)
 
-    message.match /^(\001ACTION )?(.*)/
-    message = "#{$1}\x03#{COLORISED_BUFFERS[buffer]}#{$2}"
+    if (match = message.match /^(\001ACTION )?(.*)/)
+      message = "#{match[1]}\x03#{color_code}#{match[2]}"
+    else
+      message = "\x03#{color_code}#{message}"
+    end
     args = "PRIVMSG #{targets} :#{message}"
   end
 
